@@ -8,7 +8,7 @@
 - **목표**: 아이들이 모르는 한글 단어를 입력하면, 그 단어를 구성하는 한자와 뜻을 쉽게 풀이해주는 단일 기능 앱
 - **비목표(지금은 안 함)**: 한자 쓰기 연습, 급수 시험 대비, 퀴즈/게임화 — 반응 좋으면 이후 단계에서 추가
 - **플랫폼**: iOS / Android (Expo Go로 개발, 이후 EAS Build로 배포)
-- **기술 스택**: Expo (React Native) + TypeScript + Expo Router, 백엔드 프록시(Supabase Edge Function or Vercel Function), Anthropic API
+- **기술 스택**: Expo (React Native) + TypeScript + Expo Router, 백엔드 프록시(Firebase Cloud Functions, Blaze 플랜), Gemini API
 
 ---
 
@@ -20,11 +20,12 @@
 - [x] `AGENT.md` 커밋 (코딩 컨벤션 문서)
 
 ## Phase 1. 백엔드 프록시 (AI 키 보호)
-> 앱이 Anthropic API를 직접 호출하지 않고, 이 프록시를 통해서만 호출합니다.
-- [ ] Supabase 프로젝트 생성 (또는 Vercel 프로젝트)
-- [ ] Edge Function `/hanja-lookup` 작성: 단어를 받아 Anthropic API 호출 후 결과 반환
-- [ ] Anthropic API 키를 Supabase 환경변수(Secrets)에 등록 — **코드에 절대 하드코딩 금지**
-- [ ] curl 또는 Postman으로 프록시 단독 테스트
+> 앱이 Gemini API를 직접 호출하지 않고, 이 프록시를 통해서만 호출합니다.
+- [x] Firebase 프로젝트 생성 및 Blaze 플랜으로 업그레이드 (외부 API 호출을 위해 필수)
+- [x] Firebase CLI 설치 및 `firebase init functions` 로 Functions 초기화
+- [x] Cloud Function `hanjaLookup` 작성: 단어를 받아 Gemini API 호출 후 결과 반환
+- [x] Gemini API 키를 `defineSecret()` + Cloud Secret Manager로 등록 — **코드에 절대 하드코딩 금지**
+- [ ] curl 또는 Postman으로 프록시 단독 테스트 (로컬 에뮬레이터 및 배포 후 실제 URL 둘 다)
 - [ ] 프록시 URL을 앱의 `.env`에 `EXPO_PUBLIC_API_BASE_URL` 로 등록 (`.env`는 git에 커밋하지 않음)
 
 ## Phase 2. 핵심 화면 UI (로직 없이 뼈대만)
