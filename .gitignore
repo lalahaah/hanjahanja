@@ -52,4 +52,7 @@ functions/lib/
 functions/node_modules/
 .firebase/
 .runtimeconfig.json
+functions/.secret.local
+*.secret.local
+
 
