@@ -16,7 +16,7 @@
 - [x] `npx create-expo-app` 로 프로젝트 생성 (SDK 54)
 - [x] Expo Go 실기기 연동 확인
 - [x] `.gitignore` 점검 (`node_modules`, `.env*`, `.expo`, `*.log` 포함 확인)
-- [ ] GitHub 저장소 생성 (private 권장) 및 최초 커밋
+- [x] GitHub 저장소 생성 (private 권장) 및 최초 커밋
 - [x] `AGENT.md` 커밋 (코딩 컨벤션 문서)
 
 ## Phase 1. 백엔드 프록시 (AI 키 보호)
