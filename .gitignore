@@ -46,3 +46,10 @@ app-example
 # generated native folders
 /ios
 /android
+
+# Firebase
+functions/lib/
+functions/node_modules/
+.firebase/
+.runtimeconfig.json
+

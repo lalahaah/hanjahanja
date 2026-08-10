@@ -8,11 +8,13 @@
 - Expo Router (파일 기반 라우팅)
 - 상태 관리: 최소한으로 (React useState/useContext). Redux 등 무거운 라이브러리 도입 금지 (MVP 단계)
 - 로컬 저장: AsyncStorage
-- 백엔드: Supabase Edge Function (또는 Vercel Serverless Function) — AI API 프록시 용도로만 사용
+- 백엔드: Firebase Cloud Functions (2nd gen) — AI API 프록시 용도로만 사용. Blaze 플랜 필요(외부 네트워크 호출 때문)
 
 ## 2. 보안 규칙 (절대 준수)
 - **API 키, 시크릿, 토큰을 코드에 하드코딩하지 않는다.** 항상 환경변수 또는 서버사이드 Secrets로 관리.
-- Anthropic API는 **클라이언트(앱)에서 직접 호출하지 않는다.** 반드시 백엔드 프록시를 경유한다.
+  Firebase Functions v2에서는 `defineSecret()` (Cloud Secret Manager 기반)을 사용하고,
+  더 이상 사용되지 않는 `functions.config()`는 쓰지 않는다.
+- Gemini API는 **클라이언트(앱)에서 직접 호출하지 않는다.** 반드시 Firebase Cloud Function 프록시를 경유한다.
 - `.env`, `.env.local` 등 시크릿이 담긴 파일은 **절대 git에 커밋하지 않는다.** 커밋 전 `git status`로 확인.
 - `.gitignore`에 최소한 다음이 포함되어야 한다:
   ```
