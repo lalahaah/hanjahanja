@@ -1,8 +1,13 @@
+import Constants from 'expo-constants';
 import { connectFunctionsEmulator, httpsCallable } from 'firebase/functions';
 import { functions } from './firebase';
 
 if (__DEV__) {
-  connectFunctionsEmulator(functions, 'localhost', 5001);
+  // 웹(브라우저)에서는 localhost로 충분하지만, 실기기(Expo Go)에서는 PC의 LAN IP가 필요함.
+  // Expo 개발 서버 주소(hostUri, 예: "192.168.0.26:8081")에서 호스트만 추출해 재사용.
+  const hostUri = Constants.expoConfig?.hostUri;
+  const emulatorHost = hostUri ? hostUri.split(':')[0] : 'localhost';
+  connectFunctionsEmulator(functions, emulatorHost, 5001);
 }
 
 export interface HanjaInfo {
