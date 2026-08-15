@@ -107,6 +107,7 @@ export default function HomeScreen() {
           keyExtractor={(item) => item}
           horizontal
           showsHorizontalScrollIndicator={false}
+          style={styles.recentFlatList}
           contentContainerStyle={styles.recentList}
           renderItem={({ item }) => (
             <Pressable style={styles.recentChip} onPress={() => handleRecentPress(item)}>
@@ -177,8 +178,12 @@ const styles = StyleSheet.create({
   recentTitle: {
     marginTop: 8,
   },
+  recentFlatList: {
+    flexGrow: 0,
+  },
   recentList: {
     gap: 8,
+    alignItems: 'center',
   },
   recentChip: {
     borderWidth: 1,
