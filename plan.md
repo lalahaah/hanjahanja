@@ -29,10 +29,10 @@
 - [x] ~~`EXPO_PUBLIC_API_BASE_URL` 등록~~ → callable function 방식이라 base URL 불필요. 대신 `EXPO_PUBLIC_FIREBASE_*` (apiKey, authDomain, projectId 등)을 `.env`에 등록
 
 ## Phase 2. 핵심 화면 UI (로직 없이 뼈대만)
-- [ ] 홈 화면: 단어 입력창 + 검색 버튼
-- [ ] 결과 화면(또는 같은 화면 내 결과 영역): 한자 풀이 표시 레이아웃
-- [ ] 최근 검색 목록 UI (아직 더미 데이터로)
-- [ ] 기본 네비게이션(Expo Router) 연결 확인
+- [x] 홈 화면: 단어 입력창 + 검색 버튼
+- [x] 결과 화면(같은 화면 내 결과 영역): 한자 풀이 표시 레이아웃
+- [x] 최근 검색 목록 UI (더미 데이터, 검색 시 맨 앞으로 갱신)
+- [x] 기본 네비게이션(Expo Router) 연결 확인 — 단일 기능 앱 특성상 기본 템플릿(탭/모달/hello-wave 등)은 제거하고 단일 홈 화면(`app/index.tsx`)으로 교체
 
 ## Phase 3. AI 연동
 - [x] 프록시 호출 함수 작성 (`lib/api.ts`) — `httpsCallable` 기반, `__DEV__`에서 로컬 에뮬레이터 자동 연결
