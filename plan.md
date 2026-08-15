@@ -25,8 +25,8 @@
 - [x] Firebase CLI 설치 및 `firebase init functions` 로 Functions 초기화
 - [x] Cloud Function `hanjaLookup` 작성: 단어를 받아 Gemini API 호출 후 결과 반환
 - [x] Gemini API 키를 `defineSecret()` + Cloud Secret Manager로 등록 — **코드에 절대 하드코딩 금지**
-- [ ] curl 또는 Postman으로 프록시 단독 테스트 (로컬 에뮬레이터 및 배포 후 실제 URL 둘 다)
-- [ ] 프록시 URL을 앱의 `.env`에 `EXPO_PUBLIC_API_BASE_URL` 로 등록 (`.env`는 git에 커밋하지 않음)
+- [x] ~~curl/Postman 단독 테스트~~ → REST 프록시 대신 Firebase callable function(`httpsCallable`)으로 방식 변경, 로컬 에뮬레이터에서 익명 인증 + 실제 Gemini 응답까지 end-to-end 확인 완료
+- [x] ~~`EXPO_PUBLIC_API_BASE_URL` 등록~~ → callable function 방식이라 base URL 불필요. 대신 `EXPO_PUBLIC_FIREBASE_*` (apiKey, authDomain, projectId 등)을 `.env`에 등록
 
 ## Phase 2. 핵심 화면 UI (로직 없이 뼈대만)
 - [ ] 홈 화면: 단어 입력창 + 검색 버튼
@@ -35,9 +35,9 @@
 - [ ] 기본 네비게이션(Expo Router) 연결 확인
 
 ## Phase 3. AI 연동
-- [ ] 프록시 호출 함수 작성 (`lib/api.ts`)
-- [ ] 로딩 상태 / 에러 상태 UI 처리
-- [ ] 실제 단어 입력 → 결과 표시까지 end-to-end 동작 확인
+- [x] 프록시 호출 함수 작성 (`lib/api.ts`) — `httpsCallable` 기반, `__DEV__`에서 로컬 에뮬레이터 자동 연결
+- [x] 로딩 상태 / 에러 상태 UI 처리 (임시 테스트 UI 기준, Phase 2 정식 화면에서 재구현 필요)
+- [x] 실제 단어 입력 → 결과 표시까지 end-to-end 동작 확인 ("학교" 입력 → 정상 응답 확인)
 - [ ] 프롬프트 튜닝: 초등학생이 이해하기 쉬운 톤으로 결과 다듬기
 
 ## Phase 4. 로컬 저장
