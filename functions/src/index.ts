@@ -16,6 +16,41 @@ interface HanjaLookupResponse {
   explanation: string;
 }
 
+const RETRYABLE_STATUS_CODES = [429, 503];
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+// Gemini가 일시적으로 과부하(503)이거나 rate limit(429)일 때 짧게 재시도
+async function fetchGeminiWithRetry(
+  url: string,
+  body: string,
+  maxAttempts = 3
+): Promise<Response> {
+  let lastResponse: Response | undefined;
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body,
+    });
+
+    if (res.ok || !RETRYABLE_STATUS_CODES.includes(res.status)) {
+      return res;
+    }
+
+    lastResponse = res;
+    if (attempt < maxAttempts) {
+      logger.warn(
+        `Gemini API returned ${res.status}, retrying (${attempt}/${maxAttempts - 1})`
+      );
+      await sleep(attempt * 800);
+    }
+  }
+  return lastResponse!;
+}
+
 export const hanjaLookup = onCall(
   { secrets: [geminiApiKey] },
   async (request): Promise<HanjaLookupResponse> => {
@@ -61,12 +96,9 @@ export const hanjaLookup = onCall(
     try {
       const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${apiKey}`;
 
-      const res = await fetch(geminiUrl, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
+      const res = await fetchGeminiWithRetry(
+        geminiUrl,
+        JSON.stringify({
           contents: [
             {
               parts: [{ text: prompt }],
@@ -75,8 +107,8 @@ export const hanjaLookup = onCall(
           generationConfig: {
             responseMimeType: "application/json",
           },
-        }),
-      });
+        })
+      );
 
       if (!res.ok) {
         const errorText = await res.text();
@@ -84,10 +116,10 @@ export const hanjaLookup = onCall(
           status: res.status,
           errorText: errorText.substring(0, 500),
         });
-        throw new HttpsError(
-          "internal",
-          `Gemini API 호출에 실패했습니다 (상태 코드: ${res.status})`
-        );
+        const friendlyMessage = RETRYABLE_STATUS_CODES.includes(res.status)
+          ? "지금 사용자가 많아 응답이 늦어지고 있어요. 잠시 후 다시 시도해주세요."
+          : `한자 풀이를 가져오지 못했어요 (상태 코드: ${res.status})`;
+        throw new HttpsError("internal", friendlyMessage);
       }
 
       const responseData = await res.json();

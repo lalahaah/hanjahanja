@@ -62,7 +62,7 @@ export default function HomeScreen() {
     <SafeAreaView style={[styles.safeArea, { backgroundColor: theme.background }]}>
       <ThemedView style={styles.container}>
         <ThemedView style={styles.header}>
-          <ThemedText style={styles.mascot}>🦉</ThemedText>
+          <ThemedText style={styles.mascot}>🐯</ThemedText>
           <ThemedView style={styles.headerText}>
             <ThemedText style={[styles.title, { color: theme.primaryDark }]}>한자한자</ThemedText>
             <ThemedText style={[styles.subtitle, { color: theme.icon }]}>
