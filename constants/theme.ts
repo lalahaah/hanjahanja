@@ -5,25 +5,44 @@
 
 import { Platform } from 'react-native';
 
-const tintColorLight = '#0a7ea4';
-const tintColorDark = '#fff';
+const tintColorLight = '#1CB0F6';
+const tintColorDark = '#1CB0F6';
 
+// 듀오링고풍 팔레트: 통통한 초록 포인트 + 파란 보조색 + 카드 기반 레이아웃
 export const Colors = {
   light: {
-    text: '#11181C',
-    background: '#fff',
+    text: '#3C3C3C',
+    background: '#FFFFFF',
     tint: tintColorLight,
-    icon: '#687076',
-    tabIconDefault: '#687076',
+    icon: '#AFAFAF',
+    tabIconDefault: '#AFAFAF',
     tabIconSelected: tintColorLight,
+    card: '#FFFFFF',
+    cardBorder: '#E5E5E5',
+    primary: '#58CC02',
+    primaryDark: '#58A700',
+    primaryDisabled: '#E5E5E5',
+    primaryDisabledDark: '#CFCFCF',
+    secondary: '#1CB0F6',
+    secondaryDark: '#1899D6',
+    danger: '#FF4B4B',
   },
   dark: {
-    text: '#ECEDEE',
-    background: '#151718',
+    text: '#F0F0F0',
+    background: '#131F24',
     tint: tintColorDark,
-    icon: '#9BA1A6',
-    tabIconDefault: '#9BA1A6',
+    icon: '#7A8A94',
+    tabIconDefault: '#7A8A94',
     tabIconSelected: tintColorDark,
+    card: '#202F36',
+    cardBorder: '#2B3940',
+    primary: '#58CC02',
+    primaryDark: '#4CAF00',
+    primaryDisabled: '#3A464C',
+    primaryDisabledDark: '#2B3940',
+    secondary: '#1CB0F6',
+    secondaryDark: '#1899D6',
+    danger: '#FF6B6B',
   },
 };
 

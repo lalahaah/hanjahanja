@@ -1,3 +1,6 @@
+// @react-native-async-storage/async-storage는 설치만 해두면 firebase SDK가 자동으로 감지해서
+// 네이티브(iOS/Android)에서 로그인 세션을 영구 저장함 (v10.14+ 자동 지원, 별도 설정 불필요).
+import '@react-native-async-storage/async-storage';
 import { initializeApp, getApps, getApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
 import { getFunctions } from 'firebase/functions';

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
+  Platform,
   Pressable,
   StyleSheet,
   TextInput,
@@ -10,12 +11,16 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { Colors } from '@/constants/theme';
+import { useColorScheme } from '@/hooks/use-color-scheme';
 import { hanjaLookup, HanjaLookupResponse } from '@/lib/api';
 
 // Phase 4에서 AsyncStorage로 교체 예정
 const DUMMY_RECENT_SEARCHES = ['학교', '가족', '친구'];
 
 export default function HomeScreen() {
+  const theme = Colors[useColorScheme() ?? 'light'];
+
   const [word, setWord] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -48,60 +53,84 @@ export default function HomeScreen() {
     runLookup(recentWord);
   };
 
-  return (
-    <SafeAreaView style={styles.safeArea}>
-      <ThemedView style={styles.container}>
-        <ThemedText type="title">한자한자</ThemedText>
-        <ThemedText style={styles.subtitle}>
-          모르는 단어를 입력하면 한자와 뜻을 풀이해줘요
-        </ThemedText>
+  const canSearch = !loading && !!word.trim();
 
-        <ThemedView style={styles.searchRow}>
-          <TextInput
-            value={word}
-            onChangeText={setWord}
-            placeholder="단어 입력 (예: 학교)"
-            style={styles.input}
-            onSubmitEditing={handleSearchPress}
-            returnKeyType="search"
-          />
-          <Pressable
-            style={[styles.searchButton, (loading || !word.trim()) && styles.searchButtonDisabled]}
-            onPress={handleSearchPress}
-            disabled={loading || !word.trim()}>
-            <ThemedText style={styles.searchButtonText}>검색</ThemedText>
-          </Pressable>
+  return (
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: theme.background }]}>
+      <ThemedView style={styles.container}>
+        <ThemedView style={styles.header}>
+          <ThemedText style={styles.mascot}>🦉</ThemedText>
+          <ThemedView style={styles.headerText}>
+            <ThemedText style={[styles.title, { color: theme.primaryDark }]}>한자한자</ThemedText>
+            <ThemedText style={[styles.subtitle, { color: theme.icon }]}>
+              모르는 단어를 입력하면 한자와 뜻을 풀이해줘요
+            </ThemedText>
+          </ThemedView>
         </ThemedView>
 
+        <TextInput
+          value={word}
+          onChangeText={setWord}
+          placeholder="단어 입력 (예: 학교)"
+          placeholderTextColor={theme.icon}
+          style={[
+            styles.input,
+            { borderColor: theme.cardBorder, color: theme.text, backgroundColor: theme.card },
+          ]}
+          onSubmitEditing={handleSearchPress}
+          returnKeyType="search"
+        />
+
+        <Pressable onPress={handleSearchPress} disabled={!canSearch}>
+          {({ pressed }) => (
+            <ThemedView
+              style={[
+                styles.searchButton,
+                {
+                  backgroundColor: canSearch ? theme.primary : theme.primaryDisabled,
+                  borderBottomColor: canSearch ? theme.primaryDark : theme.primaryDisabledDark,
+                  borderBottomWidth: pressed ? 0 : 4,
+                  marginTop: pressed ? 4 : 0,
+                },
+              ]}>
+              <ThemedText style={styles.searchButtonText}>검색</ThemedText>
+            </ThemedView>
+          )}
+        </Pressable>
+
         {loading && (
-          <ThemedView style={styles.resultBox}>
-            <ActivityIndicator />
+          <ThemedView style={[styles.resultCard, { backgroundColor: theme.card, borderColor: theme.cardBorder }]}>
+            <ActivityIndicator color={theme.primary} />
           </ThemedView>
         )}
 
         {error && !loading && (
-          <ThemedView style={styles.resultBox}>
-            <ThemedText style={styles.errorText}>
+          <ThemedView style={[styles.resultCard, { backgroundColor: theme.card, borderColor: theme.cardBorder }]}>
+            <ThemedText style={{ color: theme.danger }}>
               풀이를 가져오지 못했어요: {error}
             </ThemedText>
           </ThemedView>
         )}
 
         {result && !loading && !error && (
-          <ThemedView style={styles.resultBox}>
-            <ThemedText type="subtitle">{result.word}</ThemedText>
-            {result.hanja.map((h, i) => (
-              <ThemedText key={i} style={styles.hanjaLine}>
-                {h.char} ({h.sound}) — {h.meaning}
-              </ThemedText>
-            ))}
+          <ThemedView style={[styles.resultCard, { backgroundColor: theme.card, borderColor: theme.cardBorder }]}>
+            <ThemedText style={[styles.resultWord, { color: theme.primaryDark }]}>{result.word}</ThemedText>
+            <ThemedView style={styles.hanjaRow}>
+              {result.hanja.map((h, i) => (
+                <ThemedView
+                  key={i}
+                  style={[styles.hanjaBadge, { backgroundColor: theme.secondary }]}>
+                  <ThemedText style={styles.hanjaChar}>{h.char}</ThemedText>
+                  <ThemedText style={styles.hanjaSound}>{h.sound}</ThemedText>
+                  <ThemedText style={styles.hanjaMeaning}>{h.meaning}</ThemedText>
+                </ThemedView>
+              ))}
+            </ThemedView>
             <ThemedText style={styles.explanation}>{result.explanation}</ThemedText>
           </ThemedView>
         )}
 
-        <ThemedText type="defaultSemiBold" style={styles.recentTitle}>
-          최근 검색
-        </ThemedText>
+        <ThemedText style={[styles.recentTitle, { color: theme.icon }]}>최근 검색</ThemedText>
         <FlatList
           data={recentSearches}
           keyExtractor={(item) => item}
@@ -110,8 +139,10 @@ export default function HomeScreen() {
           style={styles.recentFlatList}
           contentContainerStyle={styles.recentList}
           renderItem={({ item }) => (
-            <Pressable style={styles.recentChip} onPress={() => handleRecentPress(item)}>
-              <ThemedText>{item}</ThemedText>
+            <Pressable
+              style={[styles.recentChip, { borderColor: theme.secondary }]}
+              onPress={() => handleRecentPress(item)}>
+              <ThemedText style={{ color: theme.secondaryDark, fontWeight: '700' }}>{item}</ThemedText>
             </Pressable>
           )}
         />
@@ -127,56 +158,101 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 20,
+    gap: 14,
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: 12,
   },
-  subtitle: {
-    opacity: 0.7,
+  mascot: {
+    fontSize: 40,
   },
-  searchRow: {
-    flexDirection: 'row',
-    gap: 8,
+  headerText: {
+    flex: 1,
+    gap: 2,
+  },
+  title: {
+    fontSize: 28,
+    fontWeight: '800',
+  },
+  subtitle: {
+    fontSize: 14,
   },
   input: {
-    flex: 1,
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
+    borderWidth: 2,
+    borderRadius: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
     fontSize: 16,
   },
   searchButton: {
-    backgroundColor: '#0a7ea4',
-    borderRadius: 8,
-    paddingHorizontal: 16,
-    justifyContent: 'center',
-  },
-  searchButtonDisabled: {
-    opacity: 0.5,
+    borderRadius: 16,
+    paddingVertical: 14,
+    alignItems: 'center',
   },
   searchButtonText: {
     color: '#fff',
-    fontWeight: '600',
+    fontWeight: '800',
+    fontSize: 16,
+    letterSpacing: 0.5,
   },
-  resultBox: {
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 8,
-    padding: 16,
-    gap: 6,
+  resultCard: {
+    borderWidth: 2,
+    borderRadius: 20,
+    padding: 18,
+    gap: 12,
+    ...Platform.select({
+      web: { boxShadow: '0 2px 8px rgba(0,0,0,0.06)' },
+      default: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.06,
+        shadowRadius: 8,
+        elevation: 2,
+      },
+    }),
   },
-  hanjaLine: {
-    fontSize: 18,
+  resultWord: {
+    fontSize: 22,
+    fontWeight: '800',
+  },
+  hanjaRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+  },
+  hanjaBadge: {
+    borderRadius: 14,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    alignItems: 'center',
+    minWidth: 76,
+    gap: 2,
+  },
+  hanjaChar: {
+    fontSize: 28,
+    fontWeight: '800',
+    color: '#fff',
+  },
+  hanjaSound: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#fff',
+  },
+  hanjaMeaning: {
+    fontSize: 12,
+    color: '#fff',
+    opacity: 0.9,
   },
   explanation: {
-    marginTop: 8,
     lineHeight: 22,
-  },
-  errorText: {
-    color: '#d33',
+    fontSize: 15,
   },
   recentTitle: {
-    marginTop: 8,
+    marginTop: 4,
+    fontWeight: '700',
+    fontSize: 13,
   },
   recentFlatList: {
     flexGrow: 0,
@@ -186,10 +262,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   recentChip: {
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 16,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
+    borderWidth: 2,
+    borderRadius: 20,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
   },
 });
