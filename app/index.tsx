@@ -503,11 +503,14 @@ const styles = StyleSheet.create({
   },
   modalChar: {
     fontSize: 64,
+    lineHeight: 84,
     fontWeight: '400',
+    marginBottom: 4,
   },
   modalSound: {
     fontSize: 18,
     fontWeight: '800',
+    marginTop: 4,
   },
   modalStrokeBadge: {
     borderRadius: 10,
