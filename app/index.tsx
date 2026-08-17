@@ -136,6 +136,11 @@ export default function HomeScreen() {
             <ThemedText style={{ color: theme.danger }}>
               풀이를 가져오지 못했어요: {error}
             </ThemedText>
+            <Pressable onPress={() => runLookup(word)}>
+              <ThemedText style={[styles.retryText, { color: theme.secondaryDark }]}>
+                🔄 다시 시도
+              </ThemedText>
+            </Pressable>
           </ThemedView>
         )}
 
@@ -375,6 +380,10 @@ const styles = StyleSheet.create({
   explanation: {
     lineHeight: 22,
     fontSize: 15,
+  },
+  retryText: {
+    fontWeight: '700',
+    marginTop: 4,
   },
   section: {
     gap: 4,

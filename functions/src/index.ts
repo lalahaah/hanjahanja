@@ -30,18 +30,21 @@ interface HanjaLookupResponse {
   idioms: Idiom[];
 }
 
-const RETRYABLE_STATUS_CODES = [429, 503];
+// 503(일시적 과부하)만 재시도. 429는 대부분 할당량(quota) 초과라 재시도해도 소용없음 —
+// 자세한 원인은 로그의 errorText로 확인 (예: "limit: 0"이면 그 모델에 대한 권한 자체가 없는 것)
+const OVERLOADED_STATUS = 503;
+const MODEL = "gemini-flash-latest";
 
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-// Gemini가 일시적으로 과부하(503)이거나 rate limit(429)일 때 짧게 재시도
 async function fetchGeminiWithRetry(
-  url: string,
+  apiKey: string,
   body: string,
   maxAttempts = 3
 ): Promise<Response> {
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${apiKey}`;
   let lastResponse: Response | undefined;
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     const res = await fetch(url, {
@@ -50,16 +53,14 @@ async function fetchGeminiWithRetry(
       body,
     });
 
-    if (res.ok || !RETRYABLE_STATUS_CODES.includes(res.status)) {
+    if (res.ok || res.status !== OVERLOADED_STATUS) {
       return res;
     }
 
     lastResponse = res;
     if (attempt < maxAttempts) {
-      logger.warn(
-        `Gemini API returned ${res.status}, retrying (${attempt}/${maxAttempts - 1})`
-      );
-      await sleep(attempt * 800);
+      logger.warn(`Gemini API overloaded (503), retrying (${attempt}/${maxAttempts - 1})`);
+      await sleep(attempt * 1000);
     }
   }
   return lastResponse!;
@@ -124,10 +125,8 @@ export const hanjaLookup = onCall(
 `.trim();
 
     try {
-      const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${apiKey}`;
-
       const res = await fetchGeminiWithRetry(
-        geminiUrl,
+        apiKey,
         JSON.stringify({
           contents: [
             {
@@ -146,9 +145,12 @@ export const hanjaLookup = onCall(
           status: res.status,
           errorText: errorText.substring(0, 500),
         });
-        const friendlyMessage = RETRYABLE_STATUS_CODES.includes(res.status)
-          ? "지금 사용자가 많아 응답이 늦어지고 있어요. 잠시 후 다시 시도해주세요."
-          : `한자 풀이를 가져오지 못했어요 (상태 코드: ${res.status})`;
+        let friendlyMessage = `한자 풀이를 가져오지 못했어요 (상태 코드: ${res.status})`;
+        if (res.status === OVERLOADED_STATUS) {
+          friendlyMessage = "지금 사용자가 많아 응답이 늦어지고 있어요. 잠시 후 다시 시도해주세요.";
+        } else if (res.status === 429) {
+          friendlyMessage = "오늘 사용량이 많아 잠시 이용이 제한됐어요. 잠시 후 다시 시도해주세요.";
+        }
         throw new HttpsError("internal", friendlyMessage);
       }
 
