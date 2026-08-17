@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
@@ -14,9 +14,7 @@ import { ThemedView } from '@/components/themed-view';
 import { Colors } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { hanjaLookup, HanjaLookupResponse } from '@/lib/api';
-
-// Phase 4에서 AsyncStorage로 교체 예정
-const DUMMY_RECENT_SEARCHES = ['학교', '가족', '친구'];
+import { loadRecentSearches, saveRecentSearches } from '@/lib/recent-searches';
 
 export default function HomeScreen() {
   const theme = Colors[useColorScheme() ?? 'light'];
@@ -25,7 +23,11 @@ export default function HomeScreen() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<HanjaLookupResponse | null>(null);
-  const [recentSearches, setRecentSearches] = useState(DUMMY_RECENT_SEARCHES);
+  const [recentSearches, setRecentSearches] = useState<string[]>([]);
+
+  useEffect(() => {
+    loadRecentSearches().then(setRecentSearches);
+  }, []);
 
   const runLookup = async (target: string) => {
     if (!target.trim()) return;
@@ -35,10 +37,11 @@ export default function HomeScreen() {
     try {
       const data = await hanjaLookup(target.trim());
       setResult(data);
-      setRecentSearches((prev) => [
-        target.trim(),
-        ...prev.filter((w) => w !== target.trim()),
-      ]);
+      setRecentSearches((prev) => {
+        const next = [target.trim(), ...prev.filter((w) => w !== target.trim())];
+        saveRecentSearches(next);
+        return next;
+      });
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
     } finally {
@@ -130,22 +133,26 @@ export default function HomeScreen() {
           </ThemedView>
         )}
 
-        <ThemedText style={[styles.recentTitle, { color: theme.icon }]}>최근 검색</ThemedText>
-        <FlatList
-          data={recentSearches}
-          keyExtractor={(item) => item}
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          style={styles.recentFlatList}
-          contentContainerStyle={styles.recentList}
-          renderItem={({ item }) => (
-            <Pressable
-              style={[styles.recentChip, { borderColor: theme.secondary }]}
-              onPress={() => handleRecentPress(item)}>
-              <ThemedText style={{ color: theme.secondaryDark, fontWeight: '700' }}>{item}</ThemedText>
-            </Pressable>
-          )}
-        />
+        {recentSearches.length > 0 && (
+          <>
+            <ThemedText style={[styles.recentTitle, { color: theme.icon }]}>최근 검색</ThemedText>
+            <FlatList
+              data={recentSearches}
+              keyExtractor={(item) => item}
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              style={styles.recentFlatList}
+              contentContainerStyle={styles.recentList}
+              renderItem={({ item }) => (
+                <Pressable
+                  style={[styles.recentChip, { borderColor: theme.secondary }]}
+                  onPress={() => handleRecentPress(item)}>
+                  <ThemedText style={{ color: theme.secondaryDark, fontWeight: '700' }}>{item}</ThemedText>
+                </Pressable>
+              )}
+            />
+          </>
+        )}
       </ThemedView>
     </SafeAreaView>
   );
