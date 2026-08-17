@@ -15,6 +15,7 @@ export interface HanjaInfo {
   sound: string;
   meaning: string;
   origin: string;
+  strokeCount: number;
 }
 
 export interface RelatedWord {
@@ -34,6 +35,7 @@ export interface HanjaLookupResponse {
   example: string;
   relatedWords: RelatedWord[];
   idioms: Idiom[];
+  level: string;
 }
 
 const hanjaLookupCallable = httpsCallable<{ word: string }, HanjaLookupResponse>(

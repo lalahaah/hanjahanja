@@ -2,11 +2,13 @@ import { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
+  Modal,
   Platform,
   Pressable,
   ScrollView,
   StyleSheet,
   TextInput,
+  View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -14,7 +16,7 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Colors } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
-import { hanjaLookup, HanjaLookupResponse } from '@/lib/api';
+import { hanjaLookup, HanjaInfo, HanjaLookupResponse } from '@/lib/api';
 import { loadFavorites, saveFavorites } from '@/lib/favorites';
 import { loadRecentSearches, saveRecentSearches } from '@/lib/recent-searches';
 
@@ -27,6 +29,7 @@ export default function HomeScreen() {
   const [result, setResult] = useState<HanjaLookupResponse | null>(null);
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
   const [favorites, setFavorites] = useState<HanjaLookupResponse[]>([]);
+  const [selectedChar, setSelectedChar] = useState<HanjaInfo | null>(null);
 
   useEffect(() => {
     loadRecentSearches().then(setRecentSearches);
@@ -85,15 +88,15 @@ export default function HomeScreen() {
       <ScrollView
         contentContainerStyle={styles.container}
         keyboardShouldPersistTaps="handled">
-        <ThemedView style={styles.header}>
+        <View style={styles.header}>
           <ThemedText style={styles.mascot}>🐯</ThemedText>
-          <ThemedView style={styles.headerText}>
+          <View style={styles.headerText}>
             <ThemedText style={[styles.title, { color: theme.primaryDark }]}>한자한자</ThemedText>
             <ThemedText style={[styles.subtitle, { color: theme.icon }]}>
               모르는 단어를 입력하면 한자와 뜻을 풀이해줘요
             </ThemedText>
-          </ThemedView>
-        </ThemedView>
+          </View>
+        </View>
 
         <TextInput
           value={word}
@@ -110,7 +113,7 @@ export default function HomeScreen() {
 
         <Pressable onPress={handleSearchPress} disabled={!canSearch}>
           {({ pressed }) => (
-            <ThemedView
+            <View
               style={[
                 styles.searchButton,
                 {
@@ -121,18 +124,18 @@ export default function HomeScreen() {
                 },
               ]}>
               <ThemedText style={styles.searchButtonText}>검색</ThemedText>
-            </ThemedView>
+            </View>
           )}
         </Pressable>
 
         {loading && (
-          <ThemedView style={[styles.resultCard, { backgroundColor: theme.card, borderColor: theme.cardBorder }]}>
+          <View style={[styles.resultCard, { backgroundColor: theme.card, borderColor: theme.cardBorder }]}>
             <ActivityIndicator color={theme.primary} />
-          </ThemedView>
+          </View>
         )}
 
         {error && !loading && (
-          <ThemedView style={[styles.resultCard, { backgroundColor: theme.card, borderColor: theme.cardBorder }]}>
+          <View style={[styles.resultCard, { backgroundColor: theme.card, borderColor: theme.cardBorder }]}>
             <ThemedText style={{ color: theme.danger }}>
               풀이를 가져오지 못했어요: {error}
             </ThemedText>
@@ -141,64 +144,61 @@ export default function HomeScreen() {
                 🔄 다시 시도
               </ThemedText>
             </Pressable>
-          </ThemedView>
+          </View>
         )}
 
         {result && !loading && !error && (
-          <ThemedView style={[styles.resultCard, { backgroundColor: theme.card, borderColor: theme.cardBorder }]}>
-            <ThemedView style={styles.resultHeaderRow}>
-              <ThemedText style={[styles.resultWord, { color: theme.primaryDark }]}>{result.word}</ThemedText>
+          <View style={[styles.resultCard, { backgroundColor: theme.card, borderColor: theme.cardBorder }]}>
+            <View style={styles.resultHeaderRow}>
+              <View style={styles.resultTitleGroup}>
+                <ThemedText style={[styles.resultWord, { color: theme.primaryDark }]}>{result.word}</ThemedText>
+                {!!result.level && (
+                  <View style={[styles.levelBadge, { backgroundColor: theme.primaryDisabled }]}>
+                    <ThemedText style={[styles.levelBadgeText, { color: theme.primaryDark }]}>
+                      {result.level}
+                    </ThemedText>
+                  </View>
+                )}
+              </View>
               <Pressable onPress={toggleFavorite} hitSlop={8}>
                 <ThemedText style={styles.favoriteStar}>{isFavorited ? '⭐' : '☆'}</ThemedText>
               </Pressable>
-            </ThemedView>
+            </View>
 
-            <ThemedView style={styles.hanjaRow}>
+            <View style={styles.hanjaRow}>
               {result.hanja.map((h, i) => (
-                <ThemedView
+                <Pressable
                   key={i}
-                  style={[styles.hanjaBadge, { backgroundColor: theme.secondary }]}>
+                  style={[styles.hanjaBadge, { backgroundColor: theme.secondary }]}
+                  onPress={() => setSelectedChar(h)}>
                   <ThemedText style={styles.hanjaChar}>{h.char}</ThemedText>
                   <ThemedText style={styles.hanjaSound}>{h.sound}</ThemedText>
                   <ThemedText style={styles.hanjaMeaning}>{h.meaning}</ThemedText>
-                </ThemedView>
+                </Pressable>
               ))}
-            </ThemedView>
+            </View>
 
             <ThemedText style={styles.explanation}>{result.explanation}</ThemedText>
 
-            {result.hanja.some((h) => h.origin) && (
-              <ThemedView style={styles.section}>
-                <ThemedText style={[styles.sectionTitle, { color: theme.secondaryDark }]}>
-                  📜 한자 이야기
-                </ThemedText>
-                {result.hanja.map((h, i) => (
-                  <ThemedText key={i} style={styles.sectionBody}>
-                    {h.char}({h.sound}) — {h.origin}
-                  </ThemedText>
-                ))}
-              </ThemedView>
-            )}
-
             {!!result.example && (
-              <ThemedView style={styles.section}>
+              <View style={[styles.section, { borderTopColor: theme.cardBorder }]}>
                 <ThemedText style={[styles.sectionTitle, { color: theme.secondaryDark }]}>
                   ✏️ 예문
                 </ThemedText>
                 <ThemedText style={styles.sectionBody}>{result.example}</ThemedText>
-              </ThemedView>
+              </View>
             )}
 
             {result.relatedWords?.length > 0 && (
-              <ThemedView style={styles.section}>
+              <View style={[styles.section, { borderTopColor: theme.cardBorder }]}>
                 <ThemedText style={[styles.sectionTitle, { color: theme.secondaryDark }]}>
                   🔗 비슷한 단어
                 </ThemedText>
-                <ThemedView style={styles.chipWrap}>
+                <View style={styles.chipWrap}>
                   {result.relatedWords.map((rw, i) => (
                     <Pressable
                       key={i}
-                      style={[styles.recentChip, { borderColor: theme.secondary }]}
+                      style={[styles.relatedChip, { borderColor: theme.secondary }]}
                       onPress={() => runLookup(rw.word)}>
                       <ThemedText style={{ color: theme.secondaryDark, fontWeight: '700' }}>
                         {rw.word}
@@ -208,26 +208,26 @@ export default function HomeScreen() {
                       </ThemedText>
                     </Pressable>
                   ))}
-                </ThemedView>
-              </ThemedView>
+                </View>
+              </View>
             )}
 
             {result.idioms?.length > 0 && (
-              <ThemedView style={styles.section}>
+              <View style={[styles.section, { borderTopColor: theme.cardBorder }]}>
                 <ThemedText style={[styles.sectionTitle, { color: theme.secondaryDark }]}>
                   🧧 관련 사자성어
                 </ThemedText>
                 {result.idioms.map((idiom, i) => (
-                  <ThemedView key={i} style={styles.idiomRow}>
+                  <View key={i} style={styles.idiomRow}>
                     <ThemedText style={[styles.idiomText, { color: theme.primaryDark }]}>
                       {idiom.idiom}
                     </ThemedText>
                     <ThemedText style={styles.sectionBody}>{idiom.meaning}</ThemedText>
-                  </ThemedView>
+                  </View>
                 ))}
-              </ThemedView>
+              </View>
             )}
-          </ThemedView>
+          </View>
         )}
 
         {favorites.length > 0 && (
@@ -272,6 +272,38 @@ export default function HomeScreen() {
           </>
         )}
       </ScrollView>
+
+      <Modal
+        visible={!!selectedChar}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setSelectedChar(null)}>
+        <Pressable style={styles.modalBackdrop} onPress={() => setSelectedChar(null)}>
+          <Pressable
+            style={[styles.modalCard, { backgroundColor: theme.card, borderColor: theme.cardBorder }]}
+            onPress={(e) => e.stopPropagation()}>
+            {selectedChar && (
+              <>
+                <ThemedText style={styles.modalChar}>{selectedChar.char}</ThemedText>
+                <ThemedText style={[styles.modalSound, { color: theme.primaryDark }]}>
+                  {selectedChar.sound} · {selectedChar.meaning}
+                </ThemedText>
+                <View style={[styles.modalStrokeBadge, { backgroundColor: theme.primaryDisabled }]}>
+                  <ThemedText style={[styles.modalStrokeText, { color: theme.primaryDark }]}>
+                    총 {selectedChar.strokeCount}획
+                  </ThemedText>
+                </View>
+                <ThemedText style={styles.modalOrigin}>{selectedChar.origin}</ThemedText>
+                <Pressable
+                  style={[styles.modalCloseButton, { borderColor: theme.cardBorder }]}
+                  onPress={() => setSelectedChar(null)}>
+                  <ThemedText style={{ fontWeight: '700' }}>닫기</ThemedText>
+                </Pressable>
+              </>
+            )}
+          </Pressable>
+        </Pressable>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -325,7 +357,7 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderRadius: 20,
     padding: 18,
-    gap: 12,
+    gap: 14,
     ...Platform.select({
       web: { boxShadow: '0 2px 8px rgba(0,0,0,0.06)' },
       default: {
@@ -342,6 +374,21 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
   },
+  resultTitleGroup: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    flexShrink: 1,
+  },
+  levelBadge: {
+    borderRadius: 10,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+  },
+  levelBadgeText: {
+    fontSize: 11,
+    fontWeight: '700',
+  },
   favoriteStar: {
     fontSize: 24,
   },
@@ -356,20 +403,20 @@ const styles = StyleSheet.create({
   },
   hanjaBadge: {
     borderRadius: 14,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
     alignItems: 'center',
-    minWidth: 76,
-    gap: 2,
+    minWidth: 84,
+    gap: 3,
   },
   hanjaChar: {
-    fontSize: 28,
-    fontWeight: '800',
+    fontSize: 32,
+    fontWeight: '500',
     color: '#fff',
   },
   hanjaSound: {
     fontSize: 13,
-    fontWeight: '700',
+    fontWeight: '600',
     color: '#fff',
   },
   hanjaMeaning: {
@@ -387,6 +434,8 @@ const styles = StyleSheet.create({
   },
   section: {
     gap: 4,
+    borderTopWidth: 1,
+    paddingTop: 12,
   },
   sectionTitle: {
     fontSize: 13,
@@ -400,6 +449,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 8,
+  },
+  relatedChip: {
+    borderWidth: 2,
+    borderRadius: 14,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
   },
   relatedMeaning: {
     fontSize: 11,
@@ -428,6 +483,51 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderRadius: 20,
     paddingHorizontal: 16,
+    paddingVertical: 10,
+  },
+  modalBackdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 24,
+  },
+  modalCard: {
+    width: '100%',
+    maxWidth: 340,
+    borderWidth: 2,
+    borderRadius: 24,
+    padding: 24,
+    alignItems: 'center',
+    gap: 10,
+  },
+  modalChar: {
+    fontSize: 64,
+    fontWeight: '400',
+  },
+  modalSound: {
+    fontSize: 18,
+    fontWeight: '800',
+  },
+  modalStrokeBadge: {
+    borderRadius: 10,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+  },
+  modalStrokeText: {
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  modalOrigin: {
+    fontSize: 14,
+    lineHeight: 21,
+    textAlign: 'center',
+  },
+  modalCloseButton: {
+    marginTop: 6,
+    borderWidth: 2,
+    borderRadius: 14,
+    paddingHorizontal: 20,
     paddingVertical: 10,
   },
 });

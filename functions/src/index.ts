@@ -9,6 +9,7 @@ interface HanjaInfo {
   sound: string;
   meaning: string;
   origin: string;
+  strokeCount: number;
 }
 
 interface RelatedWord {
@@ -28,6 +29,7 @@ interface HanjaLookupResponse {
   example: string;
   relatedWords: RelatedWord[];
   idioms: Idiom[];
+  level: string;
 }
 
 // 503(일시적 과부하)만 재시도. 429는 대부분 할당량(quota) 초과라 재시도해도 소용없음 —
@@ -106,7 +108,8 @@ export const hanjaLookup = onCall(
       "char": "한자글자",
       "sound": "음",
       "meaning": "훈/뜻풀이",
-      "origin": "이 한자가 어떤 모습/상황에서 만들어졌는지 초등학생이 흥미를 느낄 만한 유래 이야기 (2~3문장)"
+      "origin": "이 한자가 어떤 모습/상황에서 만들어졌는지 초등학생이 흥미를 느낄 만한 유래 이야기 (2~3문장)",
+      "strokeCount": 이_한자의_총_획수_숫자
     }
   ],
   "explanation": "초등학생이 이해할 수 있는 쉬운 단어 풀이 문장",
@@ -116,12 +119,14 @@ export const hanjaLookup = onCall(
   ],
   "idioms": [
     { "idiom": "이 단어의 한자를 포함하는 사자성어", "meaning": "사자성어의 쉬운 뜻풀이" }
-  ]
+  ],
+  "level": "이 단어의 난이도를 다음 중 하나로만: 초등 1~2학년, 초등 3~4학년, 초등 5~6학년, 중학생 이상"
 }
 
 규칙:
 - relatedWords는 2~3개, 초등학생이 알 만한 실생활 단어로 골라주세요.
 - idioms는 해당 한자를 포함하는 사자성어가 있으면 1~2개, 적절한 것이 없으면 빈 배열 []로 응답하세요. 억지로 만들어내지 마세요.
+- level은 한자능력검정시험 급수가 아니라, 이 단어를 자연스럽게 이해할 수 있는 학년을 순수하게 어휘 난이도 기준으로 판단해주세요.
 `.trim();
 
     try {
