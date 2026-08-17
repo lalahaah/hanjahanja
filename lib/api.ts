@@ -14,12 +14,26 @@ export interface HanjaInfo {
   char: string;
   sound: string;
   meaning: string;
+  origin: string;
+}
+
+export interface RelatedWord {
+  word: string;
+  meaning: string;
+}
+
+export interface Idiom {
+  idiom: string;
+  meaning: string;
 }
 
 export interface HanjaLookupResponse {
   word: string;
   hanja: HanjaInfo[];
   explanation: string;
+  example: string;
+  relatedWords: RelatedWord[];
+  idioms: Idiom[];
 }
 
 const hanjaLookupCallable = httpsCallable<{ word: string }, HanjaLookupResponse>(

@@ -4,6 +4,7 @@ import {
   FlatList,
   Platform,
   Pressable,
+  ScrollView,
   StyleSheet,
   TextInput,
 } from 'react-native';
@@ -14,6 +15,7 @@ import { ThemedView } from '@/components/themed-view';
 import { Colors } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { hanjaLookup, HanjaLookupResponse } from '@/lib/api';
+import { loadFavorites, saveFavorites } from '@/lib/favorites';
 import { loadRecentSearches, saveRecentSearches } from '@/lib/recent-searches';
 
 export default function HomeScreen() {
@@ -24,9 +26,11 @@ export default function HomeScreen() {
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<HanjaLookupResponse | null>(null);
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
+  const [favorites, setFavorites] = useState<HanjaLookupResponse[]>([]);
 
   useEffect(() => {
     loadRecentSearches().then(setRecentSearches);
+    loadFavorites().then(setFavorites);
   }, []);
 
   const runLookup = async (target: string) => {
@@ -56,11 +60,31 @@ export default function HomeScreen() {
     runLookup(recentWord);
   };
 
+  const handleFavoritePress = (favorite: HanjaLookupResponse) => {
+    setWord(favorite.word);
+    setError(null);
+    setResult(favorite);
+  };
+
+  const isFavorited = !!result && favorites.some((f) => f.word === result.word);
+
+  const toggleFavorite = () => {
+    if (!result) return;
+    setFavorites((prev) => {
+      const exists = prev.some((f) => f.word === result.word);
+      const next = exists ? prev.filter((f) => f.word !== result.word) : [result, ...prev];
+      saveFavorites(next);
+      return next;
+    });
+  };
+
   const canSearch = !loading && !!word.trim();
 
   return (
     <SafeAreaView style={[styles.safeArea, { backgroundColor: theme.background }]}>
-      <ThemedView style={styles.container}>
+      <ScrollView
+        contentContainerStyle={styles.container}
+        keyboardShouldPersistTaps="handled">
         <ThemedView style={styles.header}>
           <ThemedText style={styles.mascot}>🐯</ThemedText>
           <ThemedView style={styles.headerText}>
@@ -117,7 +141,13 @@ export default function HomeScreen() {
 
         {result && !loading && !error && (
           <ThemedView style={[styles.resultCard, { backgroundColor: theme.card, borderColor: theme.cardBorder }]}>
-            <ThemedText style={[styles.resultWord, { color: theme.primaryDark }]}>{result.word}</ThemedText>
+            <ThemedView style={styles.resultHeaderRow}>
+              <ThemedText style={[styles.resultWord, { color: theme.primaryDark }]}>{result.word}</ThemedText>
+              <Pressable onPress={toggleFavorite} hitSlop={8}>
+                <ThemedText style={styles.favoriteStar}>{isFavorited ? '⭐' : '☆'}</ThemedText>
+              </Pressable>
+            </ThemedView>
+
             <ThemedView style={styles.hanjaRow}>
               {result.hanja.map((h, i) => (
                 <ThemedView
@@ -129,8 +159,91 @@ export default function HomeScreen() {
                 </ThemedView>
               ))}
             </ThemedView>
+
             <ThemedText style={styles.explanation}>{result.explanation}</ThemedText>
+
+            {result.hanja.some((h) => h.origin) && (
+              <ThemedView style={styles.section}>
+                <ThemedText style={[styles.sectionTitle, { color: theme.secondaryDark }]}>
+                  📜 한자 이야기
+                </ThemedText>
+                {result.hanja.map((h, i) => (
+                  <ThemedText key={i} style={styles.sectionBody}>
+                    {h.char}({h.sound}) — {h.origin}
+                  </ThemedText>
+                ))}
+              </ThemedView>
+            )}
+
+            {!!result.example && (
+              <ThemedView style={styles.section}>
+                <ThemedText style={[styles.sectionTitle, { color: theme.secondaryDark }]}>
+                  ✏️ 예문
+                </ThemedText>
+                <ThemedText style={styles.sectionBody}>{result.example}</ThemedText>
+              </ThemedView>
+            )}
+
+            {result.relatedWords?.length > 0 && (
+              <ThemedView style={styles.section}>
+                <ThemedText style={[styles.sectionTitle, { color: theme.secondaryDark }]}>
+                  🔗 비슷한 단어
+                </ThemedText>
+                <ThemedView style={styles.chipWrap}>
+                  {result.relatedWords.map((rw, i) => (
+                    <Pressable
+                      key={i}
+                      style={[styles.recentChip, { borderColor: theme.secondary }]}
+                      onPress={() => runLookup(rw.word)}>
+                      <ThemedText style={{ color: theme.secondaryDark, fontWeight: '700' }}>
+                        {rw.word}
+                      </ThemedText>
+                      <ThemedText style={[styles.relatedMeaning, { color: theme.icon }]}>
+                        {rw.meaning}
+                      </ThemedText>
+                    </Pressable>
+                  ))}
+                </ThemedView>
+              </ThemedView>
+            )}
+
+            {result.idioms?.length > 0 && (
+              <ThemedView style={styles.section}>
+                <ThemedText style={[styles.sectionTitle, { color: theme.secondaryDark }]}>
+                  🧧 관련 사자성어
+                </ThemedText>
+                {result.idioms.map((idiom, i) => (
+                  <ThemedView key={i} style={styles.idiomRow}>
+                    <ThemedText style={[styles.idiomText, { color: theme.primaryDark }]}>
+                      {idiom.idiom}
+                    </ThemedText>
+                    <ThemedText style={styles.sectionBody}>{idiom.meaning}</ThemedText>
+                  </ThemedView>
+                ))}
+              </ThemedView>
+            )}
           </ThemedView>
+        )}
+
+        {favorites.length > 0 && (
+          <>
+            <ThemedText style={[styles.recentTitle, { color: theme.icon }]}>⭐ 즐겨찾기</ThemedText>
+            <FlatList
+              data={favorites}
+              keyExtractor={(item) => item.word}
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              style={styles.recentFlatList}
+              contentContainerStyle={styles.recentList}
+              renderItem={({ item }) => (
+                <Pressable
+                  style={[styles.recentChip, { borderColor: theme.primary }]}
+                  onPress={() => handleFavoritePress(item)}>
+                  <ThemedText style={{ color: theme.primaryDark, fontWeight: '700' }}>{item.word}</ThemedText>
+                </Pressable>
+              )}
+            />
+          </>
         )}
 
         {recentSearches.length > 0 && (
@@ -153,7 +266,7 @@ export default function HomeScreen() {
             />
           </>
         )}
-      </ThemedView>
+      </ScrollView>
     </SafeAreaView>
   );
 }
@@ -163,7 +276,6 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   container: {
-    flex: 1,
     padding: 20,
     gap: 14,
   },
@@ -220,6 +332,14 @@ const styles = StyleSheet.create({
       },
     }),
   },
+  resultHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  favoriteStar: {
+    fontSize: 24,
+  },
   resultWord: {
     fontSize: 22,
     fontWeight: '800',
@@ -255,6 +375,33 @@ const styles = StyleSheet.create({
   explanation: {
     lineHeight: 22,
     fontSize: 15,
+  },
+  section: {
+    gap: 4,
+  },
+  sectionTitle: {
+    fontSize: 13,
+    fontWeight: '800',
+  },
+  sectionBody: {
+    fontSize: 14,
+    lineHeight: 20,
+  },
+  chipWrap: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  relatedMeaning: {
+    fontSize: 11,
+    marginTop: 2,
+  },
+  idiomRow: {
+    gap: 1,
+  },
+  idiomText: {
+    fontSize: 15,
+    fontWeight: '800',
   },
   recentTitle: {
     marginTop: 4,

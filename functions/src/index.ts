@@ -8,12 +8,26 @@ interface HanjaInfo {
   char: string;
   sound: string;
   meaning: string;
+  origin: string;
+}
+
+interface RelatedWord {
+  word: string;
+  meaning: string;
+}
+
+interface Idiom {
+  idiom: string;
+  meaning: string;
 }
 
 interface HanjaLookupResponse {
   word: string;
   hanja: HanjaInfo[];
   explanation: string;
+  example: string;
+  relatedWords: RelatedWord[];
+  idioms: Idiom[];
 }
 
 const RETRYABLE_STATUS_CODES = [429, 503];
@@ -87,10 +101,26 @@ export const hanjaLookup = onCall(
 {
   "word": "${word.trim()}",
   "hanja": [
-    { "char": "한자글자", "sound": "음", "meaning": "훈/뜻풀이" }
+    {
+      "char": "한자글자",
+      "sound": "음",
+      "meaning": "훈/뜻풀이",
+      "origin": "이 한자가 어떤 모습/상황에서 만들어졌는지 초등학생이 흥미를 느낄 만한 유래 이야기 (2~3문장)"
+    }
   ],
-  "explanation": "초등학생이 이해할 수 있는 쉬운 단어 풀이 문장"
+  "explanation": "초등학생이 이해할 수 있는 쉬운 단어 풀이 문장",
+  "example": "이 단어를 사용한 자연스러운 예문 한 문장 (초등학생 눈높이)",
+  "relatedWords": [
+    { "word": "같은 한자를 포함하는 다른 단어", "meaning": "그 단어의 짧은 뜻풀이" }
+  ],
+  "idioms": [
+    { "idiom": "이 단어의 한자를 포함하는 사자성어", "meaning": "사자성어의 쉬운 뜻풀이" }
+  ]
 }
+
+규칙:
+- relatedWords는 2~3개, 초등학생이 알 만한 실생활 단어로 골라주세요.
+- idioms는 해당 한자를 포함하는 사자성어가 있으면 1~2개, 적절한 것이 없으면 빈 배열 []로 응답하세요. 억지로 만들어내지 마세요.
 `.trim();
 
     try {
