@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
+  Linking,
   Modal,
   Platform,
   Pressable,
@@ -272,6 +273,12 @@ export default function HomeScreen() {
             />
           </>
         )}
+
+        <Pressable
+          style={styles.footer}
+          onPress={() => Linking.openURL('https://hanja-fadd0.web.app/privacy')}>
+          <ThemedText style={[styles.footerText, { color: theme.icon }]}>개인정보처리방침</ThemedText>
+        </Pressable>
       </ScrollView>
 
       <Modal
@@ -485,6 +492,15 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     paddingHorizontal: 16,
     paddingVertical: 10,
+  },
+  footer: {
+    marginTop: 12,
+    alignItems: 'center',
+    paddingVertical: 8,
+  },
+  footerText: {
+    fontSize: 12,
+    textDecorationLine: 'underline',
   },
   modalBackdrop: {
     flex: 1,
