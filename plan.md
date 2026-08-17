@@ -63,11 +63,14 @@
 - [x] 확인: "관련 사자성어가 안 바뀐다"는 버그 아님 — 같은 한자(結)를 가진 다른 단어를 검색해도 그 한자의 대표 사자성어(결초보은)가 나오는 게 정상 동작
 
 ## Phase 5. 다듬기 & 실사용 테스트
-- [ ] **Gemini API 키 결제(billing) 활성화** — 무료 티어 할당량이 낮아서(테스트만으로도 소진됨) 실사용/스토어 출시 전 필수. [Google AI Studio](https://aistudio.google.com/) → API 키 설정에서 확인
-- [ ] 앱 아이콘 / 스플래시 화면 기본 설정
+- [x] **Gemini API 키 결제(billing) 활성화** — 완료, 정상 동작 확인
+- [x] 앱 아이콘 / 스플래시 화면 — `scripts/generate-icons.py`로 생성 (초록 배경 + "字" 글자, 브랜드 컬러와 통일)
+- [x] 개인정보처리방침 + 랜딩 페이지 작성 및 Firebase Hosting 배포 → https://hanja-fadd0.web.app/privacy
+- [x] Google Play 출시 체크리스트 정리 (`PLAYSTORE_CHECKLIST.md`) — 콘텐츠 등급/데이터 안전성 답변, 스토어 문구 초안 포함
 - [ ] 기본 에러 핸들링(네트워크 끊김 등) 점검
-- [ ] 자녀 및 주변 학부모 대상 1주일 실사용
+- [ ] 자녀 및 주변 학부모 대상 1주일 실사용 (Play Console 비공개 테스트 요건인 "12명 14일"과 겸해서 진행 권장, `PLAYSTORE_CHECKLIST.md` 참고)
 - [ ] 사용 로그/피드백 정리 → 다음 기능 우선순위 결정
+- [ ] EAS Build 설정 (실제 배포용 빌드) — Expo 계정 로그인 필요, 사용자가 직접 진행
 
 ---
 
