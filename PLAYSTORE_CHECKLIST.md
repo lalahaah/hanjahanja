@@ -22,7 +22,7 @@
 - AI 생성 콘텐츠 관련 질문이 나오면 "예, 텍스트 생성에 AI(Google Gemini)를 사용함"으로 답변
 
 ### 4. 데이터 안전 (Data Safety) 섹션
-아래 내용을 그대로 입력하면 됨 (`public/privacy.html` 내용과 동일한 근거):
+아래 내용을 그대로 입력하면 됨 (`hosting-site/privacy.html` 내용과 동일한 근거):
 
 | 항목 | 답변 |
 |---|---|

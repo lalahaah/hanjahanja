@@ -17,6 +17,7 @@ import { ThemedView } from '@/components/themed-view';
 import { Colors } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { hanjaLookup, HanjaInfo, HanjaLookupResponse } from '@/lib/api';
+import { getFriendlyErrorMessage } from '@/lib/errors';
 import { loadFavorites, saveFavorites } from '@/lib/favorites';
 import { loadRecentSearches, saveRecentSearches } from '@/lib/recent-searches';
 
@@ -50,7 +51,7 @@ export default function HomeScreen() {
         return next;
       });
     } catch (e) {
-      setError(e instanceof Error ? e.message : String(e));
+      setError(getFriendlyErrorMessage(e));
     } finally {
       setLoading(false);
     }
